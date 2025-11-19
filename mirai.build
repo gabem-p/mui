@@ -1,0 +1,11 @@
+[project]
+name:mui
+language:c
+
+[include]
+path:.
+lib:mstd
+lib:GL
+lib:glfw
+lib:freetype
+lib:harfbuzz

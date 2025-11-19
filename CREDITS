@@ -1,0 +1,9 @@
+mui was written entirely by me (gabem_p)
+
+The following third party libraries and assets were also used:
+
+- GLFW (zlib) - https://www.glfw.org/, https://www.glfw.org/license.html
+- FreeType (FTL) - https://freetype.org/, https://gitlab.freedesktop.org/freetype/freetype/-/blob/master/docs/FTL.TXT
+- HarfBuzz (MIT) - https://harfbuzz.github.io/, https://github.com/harfbuzz/harfbuzz/blob/main/COPYING
+
+- Noto Sans Japanese (OFL) - https://fonts.google.com/noto/specimen/Noto+Sans+JP, https://openfontlicense.org/open-font-license-official-text/
