@@ -44,9 +44,9 @@ bool mui_init() {
     glEnable(GL_BLEND);
 
     uint size;
-    vec2* buffer = mui_text_shape("hello mui - 恋をして!", &size);
+    vec2* buffer = mui_text_shape("hello mui - 恋をして!", 15, &size);
+
     textBufferCount = size / sizeof(vec2) / 2;
-    printf("%i\n", textBufferCount);
     glGenBuffers(1, &textBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, textBuffer);
     glBufferData(GL_ARRAY_BUFFER, size, buffer, GL_STATIC_DRAW);

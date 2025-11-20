@@ -1,12 +1,11 @@
 #include <GLES3/gl32.h>
-#include <harfbuzz/hb.h>
 #include <freetype/freetype.h>
 #include <harfbuzz/hb.h>
 #include <mstd/common.h>
 #include <mstd/types/primitives.h>
 
-#define FONT_SIZE 16
-#define ATLAS_SIZE 4096
+#define FONT_SIZE 20
+#define ATLAS_SIZE 3000
 const byte TEXTURE_MISSING[] = {[0 ... FONT_SIZE * FONT_SIZE - 1] = 255};
 
 typedef struct {
@@ -43,8 +42,7 @@ bool freetype_init(string filename) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R8,
-                 ATLAS_SIZE, ATLAS_SIZE, 0, GL_RED, GL_UNSIGNED_BYTE, null);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, ATLAS_SIZE, ATLAS_SIZE, 0, GL_RED, GL_UNSIGNED_BYTE, null);
 
     metricsTable = malloc(face->num_glyphs * sizeof(glyph_metrics));
 
@@ -70,8 +68,9 @@ bool freetype_init(string filename) {
         metricsTable[i] = metrics;
 
         glTexSubImage2D(GL_TEXTURE_2D, 0,
-                        (i % (ATLAS_SIZE / FONT_SIZE)) * FONT_SIZE, (i / (ATLAS_SIZE / FONT_SIZE)) * FONT_SIZE,
-                        width, height, GL_RED, GL_UNSIGNED_BYTE, data);
+                        (i % (ATLAS_SIZE / FONT_SIZE)) * FONT_SIZE,
+                        (i / (ATLAS_SIZE / FONT_SIZE)) * FONT_SIZE, width, height,
+                        GL_RED, GL_UNSIGNED_BYTE, data);
     }
 
     return true;
@@ -81,7 +80,6 @@ bool harfbuzz_init(string filename) {
     hb_blob_t* blob = hb_blob_create_from_file(filename);
     hb_face_t* face = hb_face_create(blob, 0);
     hbFont = hb_font_create(face);
-    hb_font_set_scale(hbFont, FONT_SIZE * 64, FONT_SIZE * 64);
 
     return true;
 }
@@ -96,10 +94,13 @@ bool mui_text_init(string filename) {
     return true;
 }
 
-vec2* mui_text_shape(string text, uint* outSize) {
+vec2* mui_text_shape(string text, uint fontSize, uint* outSize) {
+    hb_font_set_scale(hbFont, fontSize * 64, fontSize * 64);
+
     hb_buffer_t* buffer = hb_buffer_create();
     hb_buffer_add_utf8(buffer, text, -1, 0, -1);
     hb_buffer_guess_segment_properties(buffer);
+    hb_buffer_set_direction(buffer, HB_DIRECTION_LTR);
 
     hb_shape(hbFont, buffer, null, 0);
 
@@ -111,31 +112,35 @@ vec2* mui_text_shape(string text, uint* outSize) {
     vec2* vertexBuffer = malloc(size);
 
     float cursorX = 0.0;
-    float cursorY = FONT_SIZE;
+    float cursorY = fontSize;
     uint j = 0;
     for (uint i = 0; i < glyphCount; i++) {
         hb_codepoint_t glyph = glyphInfo[i].codepoint;
         glyph_metrics metrics = metricsTable[glyph];
+        float width = metrics.width * ((float)fontSize / FONT_SIZE);
+        float height = metrics.height * ((float)fontSize / FONT_SIZE);
+        float bearingX = metrics.bearingX * ((float)fontSize / FONT_SIZE);
+        float bearingY = metrics.bearingY * ((float)fontSize / FONT_SIZE);
 
         uint x = (glyph % (ATLAS_SIZE / FONT_SIZE)) * FONT_SIZE;
         uint y = (glyph / (ATLAS_SIZE / FONT_SIZE)) * FONT_SIZE;
 
-        vertexBuffer[j++] = vec2(cursorX + metrics.bearingX, cursorY - metrics.bearingY);
+        vertexBuffer[j++] = vec2(cursorX + bearingX, cursorY - bearingY);
         vertexBuffer[j++] = vec2(x, y);
 
-        vertexBuffer[j++] = vec2(cursorX + metrics.bearingX, cursorY - metrics.bearingY + metrics.height);
+        vertexBuffer[j++] = vec2(cursorX + bearingX, cursorY - bearingY + height);
         vertexBuffer[j++] = vec2(x, y + metrics.height);
 
-        vertexBuffer[j++] = vec2(cursorX + metrics.bearingX + metrics.width, cursorY - metrics.bearingY + metrics.height);
+        vertexBuffer[j++] = vec2(cursorX + bearingX + width, cursorY - bearingY + height);
         vertexBuffer[j++] = vec2(x + metrics.width, y + metrics.height);
 
-        vertexBuffer[j++] = vec2(cursorX + metrics.bearingX + metrics.width, cursorY - metrics.bearingY + metrics.height);
+        vertexBuffer[j++] = vec2(cursorX + bearingX + width, cursorY - bearingY + height);
         vertexBuffer[j++] = vec2(x + metrics.width, y + metrics.height);
 
-        vertexBuffer[j++] = vec2(cursorX + metrics.bearingX + metrics.width, cursorY - metrics.bearingY);
+        vertexBuffer[j++] = vec2(cursorX + bearingX + width, cursorY - bearingY);
         vertexBuffer[j++] = vec2(x + metrics.width, y);
 
-        vertexBuffer[j++] = vec2(cursorX + metrics.bearingX, cursorY - metrics.bearingY);
+        vertexBuffer[j++] = vec2(cursorX + bearingX, cursorY - bearingY);
         vertexBuffer[j++] = vec2(x, y);
 
         cursorX += (float)glyphPos[i].x_advance / 64;
