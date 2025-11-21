@@ -11,14 +11,13 @@ typedef bool (*mui_loop_function)(void*);
 typedef struct {
     GLFWwindow* glfwWindow;
     mui_loop_function loop;
+    void* layout;
 } mui_window;
 
 list* windows;
+mui_window* activeWindow;
 
 mui_window* mui_window_new(vec2 size, string title) {
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_API, GLFW_OPENGL_ES_API);
     GLFWwindow* glfwWindow = glfwCreateWindow(size.x, size.y, title, null, list_get(windows, 0));
 
     if (windows->length == 0)
@@ -27,8 +26,6 @@ mui_window* mui_window_new(vec2 size, string title) {
     mui_window* window = malloc(sizeof(mui_window));
     memset(window, 0, sizeof(mui_window));
     window->glfwWindow = glfwWindow;
-
-    window->loop = null;
 
     list_add(windows, window);
     return window;

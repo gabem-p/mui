@@ -8,11 +8,13 @@
 typedef struct {
     GLFWwindow* glfwWindow;
     void (*loop)(void*);
+    void* layout;
 } mui_window;
 
 typedef void (*mui_loop_function)(mui_window*);
 
 extern list* windows;
+extern mui_window* activeWindow;
 
 mui_window* mui_window_new(vec2 size, string title);
 void mui_window_destroy(mui_window* window);

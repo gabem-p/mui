@@ -84,7 +84,7 @@ bool harfbuzz_init(string filename) {
     return true;
 }
 
-bool mui_text_init(string filename) {
+bool text_init(string filename) {
     if (!freetype_init(filename))
         return false;
 
@@ -94,7 +94,7 @@ bool mui_text_init(string filename) {
     return true;
 }
 
-vec2* mui_text_shape(string text, uint fontSize, uint* outSize) {
+vec2* text_shape(string text, uint fontSize, vec2 position, uint* outSize) {
     hb_font_set_scale(hbFont, fontSize * 64, fontSize * 64);
 
     hb_buffer_t* buffer = hb_buffer_create();
@@ -111,8 +111,8 @@ vec2* mui_text_shape(string text, uint fontSize, uint* outSize) {
     uint size = glyphCount * 2 * 6 * sizeof(vec2);
     vec2* vertexBuffer = malloc(size);
 
-    float cursorX = 0.0;
-    float cursorY = fontSize;
+    float cursorX = position.x;
+    float cursorY = position.y + fontSize;
     uint j = 0;
     for (uint i = 0; i < glyphCount; i++) {
         hb_codepoint_t glyph = glyphInfo[i].codepoint;

@@ -6,12 +6,12 @@
 uint textBuffer;
 uint textBufferCount;
 uint vao;
-uint sampler;
 
 void mui_debug_draw_atlas() {
     glBindTexture(GL_TEXTURE_2D, fontAtlasId);
     glBindBuffer(GL_ARRAY_BUFFER, textBuffer);
-    glUniform1i(sampler, 0);
+    glUniform1i(shaderProgramRect.samplerUniform, 0);
+    glUniform1ui(shaderProgramRect.textUniform, true);
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, false, 2 * sizeof(vec2), (void*)0);

@@ -8,7 +8,6 @@
 #include "src/assets/text.h"
 
 static bool shouldExit = false;
-uint screenUniform;
 
 void loop(mui_window* window) {
     mui_debug_draw_atlas();
@@ -26,15 +25,13 @@ bool mui_init() {
     mui_window* window = mui_window_new(vec2(1000, 600), "mui");
     mui_window_set_loop(window, loop);
 
-    if (!mui_text_init("assets/NotoSansJP-Regular.ttf"))
+    if (!text_init("assets/NotoSansJP-Regular.ttf"))
         return false;
 
-    if (!mui_shader_init())
+    if (!shader_init())
         return false;
 
-    glUseProgram(shaderProgramRect);
-    sampler = glGetUniformLocation(shaderProgramRect, "texSampler");
-    screenUniform = glGetUniformLocation(shaderProgramRect, "screen");
+    glUseProgram(shaderProgramRect.id);
 
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
@@ -44,8 +41,7 @@ bool mui_init() {
     glEnable(GL_BLEND);
 
     uint size;
-    vec2* buffer = mui_text_shape("hello mui - 恋をして!", 15, &size);
-
+    vec2* buffer = text_shape("hello mui - 恋をして!", 15, VEC2_ZERO, &size);
     textBufferCount = size / sizeof(vec2) / 2;
     glGenBuffers(1, &textBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, textBuffer);
@@ -94,7 +90,7 @@ void mui_loop() {
             int height;
             glfwGetWindowSize(window->glfwWindow, &width, &height);
             glViewport(0, 0, width, height);
-            glUniform2f(screenUniform, width, height);
+            glUniform2f(shaderProgramRect.screenUniform, width, height);
 
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             window->loop(window);

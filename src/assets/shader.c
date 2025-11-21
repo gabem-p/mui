@@ -46,7 +46,7 @@ shader_compile_result compile_shader(GLenum type, FILE* file) {
     return (shader_compile_result){shader, success};
 }
 
-bool mui_shader_program_new(uint* outProgram, FILE* vert, FILE* frag) {
+bool shader_program_new(uint* outProgram, FILE* vert, FILE* frag) {
     uint program = glCreateProgram();
 
 #define compile(type, arg) { \
@@ -65,21 +65,33 @@ bool mui_shader_program_new(uint* outProgram, FILE* vert, FILE* frag) {
         string infoLog = calloc(1, length);
         glGetProgramInfoLog(program, length, null, infoLog);
         fprintf(stderr, "mui: program linking error:\n%s\n", infoLog);
+
+        return false;
     }
 
     glLinkProgram(program);
     *outProgram = program;
-    return success;
+    return true;
 }
 
-uint shaderProgramRect;
+typedef struct {
+    uint id;
+    uint screenUniform;
+    uint samplerUniform;
+    uint textUniform;
+} program_rect;
+program_rect shaderProgramRect;
 
-bool mui_shader_init() {
+bool shader_init() {
 #define error(name) fprintf(stderr, "mui: shader program \"%s\" failed to compile\n", name)
 
-    if (!mui_shader_program_new(&shaderProgramRect, fopen("assets/shader/rect.vert", "r"), fopen("assets/shader/rect.frag", "r"))) {
+    if (!shader_program_new(&shaderProgramRect.id, fopen("assets/shader/rect.vert", "r"), fopen("assets/shader/rect.frag", "r"))) {
         error("rect");
         return false;
     }
+    shaderProgramRect.screenUniform = glGetUniformLocation(shaderProgramRect.id, "screen");
+    shaderProgramRect.samplerUniform = glGetUniformLocation(shaderProgramRect.id, "texSampler");
+    shaderProgramRect.textUniform = glGetUniformLocation(shaderProgramRect.id, "text");
+
     return true;
 }

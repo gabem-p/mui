@@ -5,5 +5,5 @@
 
 extern uint fontAtlasId;
 
-bool mui_text_init(string filename);
-vec2* mui_text_shape(string text, uint fontSize, uint* outSize);
+bool text_init(string filename);
+vec2* text_shape(string text, uint fontSize, vec2 position, uint* outSize);
