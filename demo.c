@@ -4,9 +4,9 @@
 #include <mstd/types/primitives.h>
 #include "mui.h"
 
-// void layout(mui_window* window) {
-//     mui_text("hello mui - 恋をして!");
-// }
+void layout(mui_window* window) {
+    mui_text("hello mui - 恋をして!");
+}
 
 int main(int argc, string argv[]) {
     if (!mui_init())

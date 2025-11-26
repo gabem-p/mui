@@ -30,8 +30,14 @@ typedef struct {
 typedef struct {
     list* elements;
     mui_window* window;
+
     stack* regionStack;
 } mui_layout;
+
+typedef struct {
+    uint textSize;
+} layout_settings;
+layout_settings settings;
 
 void layout_init(mui_window* window) {
     mui_layout* layout = malloc(sizeof(mui_layout));
@@ -53,8 +59,12 @@ mui_element* element_new(enum element_type type) {
     return element;
 }
 
-void mui_text(string text, uint size) {
+void mui_defaults() {
+    settings.textSize = 15;
+}
+
+void mui_text(string text) {
     mui_element* element = element_new(ELEMENT_TEXT);
     element->text.text = text;
-    element->text.size = size;
+    element->text.size = settings.textSize;
 }

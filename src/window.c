@@ -6,11 +6,11 @@
 #include <mstd/types/list.h>
 #include "src/render/draw.h"
 
-typedef bool (*mui_loop_function)(void*);
+typedef bool (*mui_layout_function)(void*);
 
 typedef struct {
     GLFWwindow* glfwWindow;
-    mui_loop_function loop;
+    mui_layout_function layoutFunction;
     void* layout;
 } mui_window;
 
@@ -37,6 +37,8 @@ void mui_window_destroy(mui_window* window) {
     free(window);
 }
 
-void mui_window_set_loop(mui_window* window, mui_loop_function function) {
-    window->loop = function;
+void layout_init(mui_window* window);
+void mui_window_layout(mui_window* window, mui_layout_function function) {
+    window->layoutFunction = function;
+    layout_init(window);
 }

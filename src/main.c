@@ -23,7 +23,7 @@ bool mui_init() {
 
     windows = list_new();
     mui_window* window = mui_window_new(vec2(1000, 600), "mui");
-    mui_window_set_loop(window, loop);
+    mui_window_layout(window, loop);
 
     if (!text_init("assets/NotoSansJP-Regular.ttf"))
         return false;

@@ -8,6 +8,8 @@ string str_from_shader_type(GLenum type) {
         return "vertex";
     case GL_FRAGMENT_SHADER:
         return "fragment";
+    case GL_GEOMETRY_SHADER:
+        return "geometry";
     default:
         return null;
     }
@@ -18,8 +20,9 @@ typedef struct {
     bool success;
 } shader_compile_result;
 
-shader_compile_result compile_shader(GLenum type, FILE* file) {
+shader_compile_result compile_shader(GLenum type, string path) {
     uint shader = glCreateShader(type);
+    FILE* file = fopen(path, "r");
 
     fseek(file, 0, SEEK_END);
     long size = ftell(file);
@@ -46,16 +49,19 @@ shader_compile_result compile_shader(GLenum type, FILE* file) {
     return (shader_compile_result){shader, success};
 }
 
-bool shader_program_new(uint* outProgram, FILE* vert, FILE* frag) {
+bool shader_program_new(uint* outProgram, string vert, string frag, string geom) {
     uint program = glCreateProgram();
 
 #define compile(type, arg) { \
-    shader_compile_result result = compile_shader(type, arg); \
-    glAttachShader(program, result.shader); \
+    if(arg != null) { \
+        shader_compile_result result = compile_shader(type, arg); \
+        glAttachShader(program, result.shader); \
+    } \
 }
 
     compile(GL_VERTEX_SHADER, vert);
     compile(GL_FRAGMENT_SHADER, frag);
+    compile(GL_GEOMETRY_SHADER, geom);
 
     bool success = true;
     glGetProgramiv(program, GL_COMPILE_STATUS, (int*)&success);
@@ -83,9 +89,14 @@ typedef struct {
 program_rect shaderProgramRect;
 
 bool shader_init() {
-#define error(name) fprintf(stderr, "mui: shader program \"%s\" failed to compile\n", name)
+#define error(name) { \
+    fprintf(stderr, "mui: shader program \"%s\" failed to compile\n", name); \
+}
 
-    if (!shader_program_new(&shaderProgramRect.id, fopen("assets/shader/rect.vert", "r"), fopen("assets/shader/rect.frag", "r"))) {
+    if (!shader_program_new(&shaderProgramRect.id,
+                            "assets/shader/rect.vert",
+                            "assets/shader/rect.frag",
+                            null)) {
         error("rect");
         return false;
     }
