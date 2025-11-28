@@ -7,7 +7,12 @@
 void layout(mui_window* window) {
     mui_region {
         mui_text("hello mui - 恋をして!");
+
+        mui_text_size(20);
         mui_text("hello again!");
+
+        mui_text_size(10);
+        mui_text("and now were tiny :(");
     }
 }
 

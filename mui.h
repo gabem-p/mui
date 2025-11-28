@@ -19,6 +19,7 @@ void mui_window_layout(mui_window* window, mui_layout_function function);
 
 void mui_defaults();
 void mui_text(string text);
+void mui_text_size(uint size);
 
 void mui_region_push();
 void mui_region_pop();

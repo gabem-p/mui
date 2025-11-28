@@ -3,6 +3,7 @@
 #include <harfbuzz/hb.h>
 #include <mstd/common.h>
 #include <mstd/types/primitives.h>
+#include "src/render/buffer.h"
 
 #define FONT_SIZE 20
 #define ATLAS_SIZE 3000
@@ -96,7 +97,7 @@ bool text_init(string filename) {
     return true;
 }
 
-vec2* text_shape(string text, uint fontSize, vec2 position, vec2* vertexBuffer, uint* bufferSize) {
+void text_shape(string text, uint fontSize, vec2 position, mui_buffer* vbuffer) {
     hb_font_set_scale(hbFont, fontSize * 64, fontSize * 64);
 
     hb_buffer_t* buffer = hb_buffer_create();
@@ -110,20 +111,14 @@ vec2* text_shape(string text, uint fontSize, vec2 position, vec2* vertexBuffer, 
     hb_glyph_info_t* glyphInfo = hb_buffer_get_glyph_infos(buffer, &glyphCount);
     hb_glyph_position_t* glyphPos = hb_buffer_get_glyph_positions(buffer, &glyphCount);
 
-    uint j = *bufferSize;
-
-    *bufferSize += glyphCount * 2 * 6 * sizeof(vec2);
-    vec2* vbuffer;
-    if (vertexBuffer == null)
-        vbuffer = malloc(*bufferSize);
-    else
-        vbuffer = realloc(vertexBuffer, *bufferSize);
-    printf("j=%i vbuf=%p start=%p first=<%f,%f> size=%i\n", j, vbuffer, vbuffer + j, vbuffer[j].x, vbuffer[j].y, *bufferSize);
+    ulong size = glyphCount * 2 * 6 * sizeof(vec2);
+    vec2* tempBuffer = malloc(size);
 
     float cursorX = position.x;
     float cursorY = position.y + fontSize;
-    printf("text=\"%s\", fontSize=%i bufferSize=%i\n", text, fontSize, *bufferSize);
-    for (uint i = 0; i < glyphCount; i++) {
+    printf("[\"%s\"] size=%i\n", text, fontSize);
+
+    for (uint i = 0, j = 0; i < glyphCount; i++) {
         hb_codepoint_t glyph = glyphInfo[i].codepoint;
         glyph_metrics metrics = metricsTable[glyph];
         float width = metrics.width * ((float)fontSize / FONT_SIZE);
@@ -134,28 +129,27 @@ vec2* text_shape(string text, uint fontSize, vec2 position, vec2* vertexBuffer, 
         uint x = (glyph % (ATLAS_SIZE / FONT_SIZE)) * FONT_SIZE;
         uint y = (glyph / (ATLAS_SIZE / FONT_SIZE)) * FONT_SIZE;
 
-        vbuffer[j++] = vec2(cursorX + bearingX, cursorY - bearingY);
-        vbuffer[j++] = vec2(x, y);
+        tempBuffer[j++] = vec2(cursorX + bearingX, cursorY - bearingY);
+        tempBuffer[j++] = vec2(x, y);
 
-        vbuffer[j++] = vec2(cursorX + bearingX, cursorY - bearingY + height);
-        vbuffer[j++] = vec2(x, y + metrics.height);
+        tempBuffer[j++] = vec2(cursorX + bearingX, cursorY - bearingY + height);
+        tempBuffer[j++] = vec2(x, y + metrics.height);
 
-        vbuffer[j++] = vec2(cursorX + bearingX + width, cursorY - bearingY + height);
-        vbuffer[j++] = vec2(x + metrics.width, y + metrics.height);
+        tempBuffer[j++] = vec2(cursorX + bearingX + width, cursorY - bearingY + height);
+        tempBuffer[j++] = vec2(x + metrics.width, y + metrics.height);
 
-        vbuffer[j++] = vec2(cursorX + bearingX + width, cursorY - bearingY + height);
-        vbuffer[j++] = vec2(x + metrics.width, y + metrics.height);
+        tempBuffer[j++] = vec2(cursorX + bearingX + width, cursorY - bearingY + height);
+        tempBuffer[j++] = vec2(x + metrics.width, y + metrics.height);
 
-        vbuffer[j++] = vec2(cursorX + bearingX + width, cursorY - bearingY);
-        vbuffer[j++] = vec2(x + metrics.width, y);
+        tempBuffer[j++] = vec2(cursorX + bearingX + width, cursorY - bearingY);
+        tempBuffer[j++] = vec2(x + metrics.width, y);
 
-        vbuffer[j++] = vec2(cursorX + bearingX, cursorY - bearingY);
-        vbuffer[j++] = vec2(x, y);
+        tempBuffer[j++] = vec2(cursorX + bearingX, cursorY - bearingY);
+        tempBuffer[j++] = vec2(x, y);
 
         cursorX += (float)glyphPos[i].x_advance / 64;
     }
 
+    mui_buffer_expand(vbuffer, tempBuffer, size);
     hb_buffer_destroy(buffer);
-
-    return vbuffer;
 }

@@ -41,7 +41,9 @@ typedef struct {
 
 void mui_layout_compute(mui_layout* layout);
 void mui_defaults();
+
 void mui_text(string text);
+void mui_text_size(uint size);
 
 void mui_region_push();
 void mui_region_pop();

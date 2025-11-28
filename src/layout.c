@@ -5,6 +5,7 @@
 #include <mstd/types/list.h>
 #include <mstd/types/stack.h>
 #include "src/assets/text.h"
+#include "src/render/buffer.h"
 
 enum element_type {
     ELEMENT_TEXT,
@@ -45,7 +46,7 @@ typedef struct {
 } layout_settings;
 layout_settings settings;
 
-void compute_elements(list* elements, vec2 cursor, vec2** buffer, uint* bufferSize) {
+void compute_elements(list* elements, vec2 cursor, mui_buffer* buffer) {
     list_iterator* iterator = list_iter_new(elements);
     for (uint i = 0; i < elements->length; i++, list_iter_next(iterator)) {
         mui_element* element = list_iter_get(iterator);
@@ -53,24 +54,26 @@ void compute_elements(list* elements, vec2 cursor, vec2** buffer, uint* bufferSi
         switch (element->type) {
 
         case ELEMENT_TEXT:
-            *buffer = text_shape(element->text.text, element->text.size, cursor, *buffer, bufferSize);
-            printf("%i\n", *bufferSize);
+            text_shape(element->text.text, element->text.size, cursor, buffer);
             cursor.y += element->text.size;
             break;
 
         case ELEMENT_REGION:
+            if (element->region.id != 0)
+                glDeleteBuffers(1, &element->region.id);
             glGenBuffers(1, &element->region.id);
-            vec2* regionBuffer = null;
-            uint regionBufferSize = 0;
 
-            compute_elements(element->region.children, cursor, &regionBuffer, &regionBufferSize);
+            mui_buffer* regionBuffer = mui_buffer_new();
+
+            compute_elements(element->region.children, cursor, regionBuffer);
+            printf("[region] bufsize=%li\n", regionBuffer->size);
 
             glBindBuffer(GL_ARRAY_BUFFER, element->region.id);
-            glBufferData(GL_ARRAY_BUFFER, regionBufferSize, regionBuffer, GL_STATIC_DRAW);
-            free(regionBuffer);
+            glBufferData(GL_ARRAY_BUFFER, regionBuffer->size, regionBuffer->data, GL_STATIC_DRAW);
 
-            element->region.count = regionBufferSize / sizeof(vec2) / 2;
+            element->region.count = regionBuffer->size / sizeof(vec2) / 2;
             list_add(layout->regions, element);
+            mui_buffer_cleanup(regionBuffer);
             break;
         }
     }
@@ -82,7 +85,7 @@ void mui_layout_compute(mui_layout* layout) {
         list_cleanup(layout->regions);
     layout->regions = list_new();
 
-    compute_elements(layout->elements, VEC2_ZERO, null, 0);
+    compute_elements(layout->elements, VEC2_ZERO, null);
 }
 
 void layout_init(mui_window* window) {
@@ -119,6 +122,7 @@ void mui_region_push() {
     mui_layout* layout = activeWindow->layout;
 
     element->region.children = list_new();
+    element->region.id = 0;
 
     stack_push(layout->regionStack, element);
 }
@@ -138,4 +142,8 @@ void mui_text(string text) {
 
     element->text.text = text;
     element->text.size = settings.textSize;
+}
+
+void mui_text_size(uint size) {
+    settings.textSize = size;
 }
