@@ -2,6 +2,7 @@
 
 layout(location = 0) in vec2 inPosition;
 layout(location = 1) in vec2 inUV;
+layout(location = 2)
 out vec2 position;
 out vec2 uv;
 

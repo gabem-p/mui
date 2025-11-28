@@ -1,6 +1,7 @@
 #include <GLES3/gl32.h>
 #include <string.h>
 #include <mstd/common.h>
+#include <mstd/types/list.h>
 
 string str_from_shader_type(GLenum type) {
     switch (type) {
@@ -90,16 +91,15 @@ typedef struct {
 } program_text;
 program_text shaderProgramText;
 
+list* shaders;
+
 bool shader_init() {
 
 #define error(name) { \
     fprintf(stderr, "mui: shader program \"%s\" failed to compile\n", name); \
 }
 
-    if (!shader_program_new(&shaderProgramText.id,
-                            "assets/shader/rect.vert",
-                            "assets/shader/text.frag",
-                            null)) {
+    if (!shader_program_new(&shaderProgramText.id, "assets/shader/rect.vert", "assets/shader/text.frag", null)) {
         error("rect");
         return false;
     }

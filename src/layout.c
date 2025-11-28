@@ -25,8 +25,10 @@ typedef struct {
             float size;
         } text;
         struct {
-            uint id;
-            uint count;
+            uint textbuf;
+            uint rectbuf;
+            uint textCount;
+            uint rectCount;
             list* children;
         } region;
     };
@@ -46,7 +48,7 @@ typedef struct {
 } layout_settings;
 layout_settings settings;
 
-void compute_elements(list* elements, vec2 cursor, mui_buffer* buffer) {
+void compute_elements(list* elements, vec2 cursor, mui_buffer* textbuf, mui_buffer* rectbuf) {
     list_iterator* iterator = list_iter_new(elements);
     for (uint i = 0; i < elements->length; i++, list_iter_next(iterator)) {
         mui_element* element = list_iter_get(iterator);
@@ -54,26 +56,37 @@ void compute_elements(list* elements, vec2 cursor, mui_buffer* buffer) {
         switch (element->type) {
 
         case ELEMENT_TEXT:
-            text_shape(element->text.text, element->text.size, cursor, buffer);
+            text_shape(element->text.text, element->text.size, cursor, textbuf);
             cursor.y += element->text.size;
             break;
 
         case ELEMENT_REGION:
-            if (element->region.id != 0)
-                glDeleteBuffers(1, &element->region.id);
-            glGenBuffers(1, &element->region.id);
+            if (element->region.textbuf != 0)
+                glDeleteBuffers(1, &element->region.textbuf);
+            glGenBuffers(1, &element->region.textbuf);
 
-            mui_buffer* regionBuffer = mui_buffer_new();
+            if (element->region.rectbuf != 0)
+                glDeleteBuffers(1, &element->region.rectbuf);
+            glGenBuffers(1, &element->region.rectbuf);
 
-            compute_elements(element->region.children, cursor, regionBuffer);
-            printf("[region] bufsize=%li\n", regionBuffer->size);
+            mui_buffer* textbuf = mui_buffer_new();
+            mui_buffer* rectbuf = mui_buffer_new();
 
-            glBindBuffer(GL_ARRAY_BUFFER, element->region.id);
-            glBufferData(GL_ARRAY_BUFFER, regionBuffer->size, regionBuffer->data, GL_STATIC_DRAW);
+            compute_elements(element->region.children, cursor, textbuf, rectbuf);
+            printf("[region] textbuf=%li rectbuf=%li\n", textbuf->size, rectbuf->size);
 
-            element->region.count = regionBuffer->size / sizeof(vec2) / 2;
+            glBindBuffer(GL_ARRAY_BUFFER, element->region.textbuf);
+            glBufferData(GL_ARRAY_BUFFER, textbuf->size, textbuf->data, GL_STATIC_DRAW);
+
+            glBindBuffer(GL_ARRAY_BUFFER, element->region.rectbuf);
+            glBufferData(GL_ARRAY_BUFFER, rectbuf->size, rectbuf->data, GL_STATIC_DRAW);
+
+            element->region.textbuf = textbuf->size / sizeof(vec2) / 2;
+            element->region.rectbuf = rectbuf->size / sizeof(vec2);
             list_add(layout->regions, element);
-            mui_buffer_cleanup(regionBuffer);
+
+            mui_buffer_cleanup(textbuf);
+            mui_buffer_cleanup(rectbuf);
             break;
         }
     }
