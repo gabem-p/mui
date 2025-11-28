@@ -94,7 +94,7 @@ bool text_init(string filename) {
     return true;
 }
 
-vec2* text_shape(string text, uint fontSize, vec2 position, uint* outSize) {
+uint text_shape(string text, uint fontSize, vec2 position, vec2** vertexBuffer, uint bufferSize) {
     hb_font_set_scale(hbFont, fontSize * 64, fontSize * 64);
 
     hb_buffer_t* buffer = hb_buffer_create();
@@ -108,8 +108,8 @@ vec2* text_shape(string text, uint fontSize, vec2 position, uint* outSize) {
     hb_glyph_info_t* glyphInfo = hb_buffer_get_glyph_infos(buffer, &glyphCount);
     hb_glyph_position_t* glyphPos = hb_buffer_get_glyph_positions(buffer, &glyphCount);
 
-    uint size = glyphCount * 2 * 6 * sizeof(vec2);
-    vec2* vertexBuffer = malloc(size);
+    uint size = bufferSize + glyphCount * 2 * 6 * sizeof(vec2);
+    *vertexBuffer = realloc(*vertexBuffer, size);
 
     float cursorX = position.x;
     float cursorY = position.y + fontSize;
@@ -125,27 +125,26 @@ vec2* text_shape(string text, uint fontSize, vec2 position, uint* outSize) {
         uint x = (glyph % (ATLAS_SIZE / FONT_SIZE)) * FONT_SIZE;
         uint y = (glyph / (ATLAS_SIZE / FONT_SIZE)) * FONT_SIZE;
 
-        vertexBuffer[j++] = vec2(cursorX + bearingX, cursorY - bearingY);
-        vertexBuffer[j++] = vec2(x, y);
+        *vertexBuffer[j++] = vec2(cursorX + bearingX, cursorY - bearingY);
+        *vertexBuffer[j++] = vec2(x, y);
 
-        vertexBuffer[j++] = vec2(cursorX + bearingX, cursorY - bearingY + height);
-        vertexBuffer[j++] = vec2(x, y + metrics.height);
+        *vertexBuffer[j++] = vec2(cursorX + bearingX, cursorY - bearingY + height);
+        *vertexBuffer[j++] = vec2(x, y + metrics.height);
 
-        vertexBuffer[j++] = vec2(cursorX + bearingX + width, cursorY - bearingY + height);
-        vertexBuffer[j++] = vec2(x + metrics.width, y + metrics.height);
+        *vertexBuffer[j++] = vec2(cursorX + bearingX + width, cursorY - bearingY + height);
+        *vertexBuffer[j++] = vec2(x + metrics.width, y + metrics.height);
 
-        vertexBuffer[j++] = vec2(cursorX + bearingX + width, cursorY - bearingY + height);
-        vertexBuffer[j++] = vec2(x + metrics.width, y + metrics.height);
+        *vertexBuffer[j++] = vec2(cursorX + bearingX + width, cursorY - bearingY + height);
+        *vertexBuffer[j++] = vec2(x + metrics.width, y + metrics.height);
 
-        vertexBuffer[j++] = vec2(cursorX + bearingX + width, cursorY - bearingY);
-        vertexBuffer[j++] = vec2(x + metrics.width, y);
+        *vertexBuffer[j++] = vec2(cursorX + bearingX + width, cursorY - bearingY);
+        *vertexBuffer[j++] = vec2(x + metrics.width, y);
 
-        vertexBuffer[j++] = vec2(cursorX + bearingX, cursorY - bearingY);
-        vertexBuffer[j++] = vec2(x, y);
+        *vertexBuffer[j++] = vec2(cursorX + bearingX, cursorY - bearingY);
+        *vertexBuffer[j++] = vec2(x, y);
 
         cursorX += (float)glyphPos[i].x_advance / 64;
     }
 
-    *outSize = size;
-    return vertexBuffer;
+    return size;
 }

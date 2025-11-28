@@ -6,4 +6,4 @@
 extern uint fontAtlasId;
 
 bool text_init(string filename);
-vec2* text_shape(string text, uint fontSize, vec2 position, uint* outSize);
+uint text_shape(string text, uint fontSize, vec2 position, vec2** vertexBuffer, uint bufferSize);

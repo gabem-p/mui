@@ -84,25 +84,26 @@ typedef struct {
     uint id;
     uint screenUniform;
     uint samplerUniform;
-    uint textUniform;
-} program_rect;
-program_rect shaderProgramRect;
+    uint colorUniform;
+} program_text;
+program_text shaderProgramText;
 
 bool shader_init() {
+
 #define error(name) { \
     fprintf(stderr, "mui: shader program \"%s\" failed to compile\n", name); \
 }
 
-    if (!shader_program_new(&shaderProgramRect.id,
+    if (!shader_program_new(&shaderProgramText.id,
                             "assets/shader/rect.vert",
-                            "assets/shader/rect.frag",
+                            "assets/shader/text.frag",
                             null)) {
         error("rect");
         return false;
     }
-    shaderProgramRect.screenUniform = glGetUniformLocation(shaderProgramRect.id, "screen");
-    shaderProgramRect.samplerUniform = glGetUniformLocation(shaderProgramRect.id, "texSampler");
-    shaderProgramRect.textUniform = glGetUniformLocation(shaderProgramRect.id, "text");
+    shaderProgramText.screenUniform = glGetUniformLocation(shaderProgramText.id, "screen");
+    shaderProgramText.samplerUniform = glGetUniformLocation(shaderProgramText.id, "texSampler");
+    shaderProgramText.colorUniform = glGetUniformLocation(shaderProgramText.id, "textColor");
 
     return true;
 }

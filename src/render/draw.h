@@ -1,9 +1,8 @@
 #pragma once
 
 #include <mstd/common.h>
+#include "src/layout.h"
 
-extern uint textBuffer;
-extern uint textBufferCount;
 extern uint vao;
 
-void mui_debug_draw_atlas();
+void mui_draw(mui_layout* layout);

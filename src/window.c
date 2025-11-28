@@ -18,6 +18,9 @@ list* windows;
 mui_window* activeWindow;
 
 mui_window* mui_window_new(vec2 size, string title) {
+    if (windows->length == 0)
+        glfwWindowHint(GLFW_VISIBLE, false);
+
     GLFWwindow* glfwWindow = glfwCreateWindow(size.x, size.y, title, null, list_get(windows, 0));
 
     if (windows->length == 0)
@@ -41,4 +44,8 @@ void layout_init(mui_window* window);
 void mui_window_layout(mui_window* window, mui_layout_function function) {
     window->layoutFunction = function;
     layout_init(window);
+
+    activeWindow = window;
+    function(window);
+    mui_layout_compute(window->layout);
 }

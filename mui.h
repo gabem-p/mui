@@ -17,4 +17,9 @@ mui_window* mui_window_new(vec2 size, string title);
 void mui_window_destroy(mui_window* window);
 void mui_window_layout(mui_window* window, mui_layout_function function);
 
-void mui_text();
+void mui_defaults();
+void mui_text(string text);
+
+void mui_region_push();
+void mui_region_pop();
+#define mui_region mui_region_push(); for(uint i = 0; i++ == 0; mui_region_pop())

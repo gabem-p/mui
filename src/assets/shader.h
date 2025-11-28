@@ -6,8 +6,8 @@ typedef struct {
     uint id;
     uint screenUniform;
     uint samplerUniform;
-    uint textUniform;
-} program_rect;
-extern program_rect shaderProgramRect;
+    uint colorUniform;
+} program_text;
+extern program_text shaderProgramText;
 
 bool shader_init();

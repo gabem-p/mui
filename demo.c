@@ -5,14 +5,18 @@
 #include "mui.h"
 
 void layout(mui_window* window) {
-    mui_text("hello mui - 恋をして!");
+    mui_region {
+        mui_text("hello mui - 恋をして!");
+    }
 }
 
 int main(int argc, string argv[]) {
     if (!mui_init())
         return -1;
-
     printf("gl version: %s\n", glGetString(GL_VERSION));
+
+    mui_window* window = mui_window_new(vec2(1000, 600), "mui");
+    mui_window_layout(window, layout);
 
     mui_loop();
 
