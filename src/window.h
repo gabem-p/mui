@@ -7,8 +7,9 @@
 
 typedef struct {
     GLFWwindow* glfwWindow;
-    void (*loop)(void*);
+    void (*layoutFunction)(void*);
     void* layout;
+    uint vao;
 } mui_window;
 
 typedef void (*mui_layout_function)(mui_window*);

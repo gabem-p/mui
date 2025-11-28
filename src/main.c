@@ -30,15 +30,6 @@ bool mui_init() {
     if (!shader_init())
         return false;
 
-    glUseProgram(shaderProgramText.id);
-
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-
-    glClearColor(1, 1, 1, 1);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_BLEND);
-
     return true;
 }
 
@@ -61,13 +52,12 @@ void mui_exit() {
 void mui_loop() {
     shouldExit = false;
     while (!shouldExit) {
-        glfwPollEvents();
-
         list_iterator* iterator = list_iter_new(windows);
         for (uint i = 0; i < windows->length; i++, list_iter_next(iterator)) {
             mui_window* window = list_iter_get(iterator);
+            if (i == 0)
+                continue;
 
-            printf("%p\n", window->glfwWindow);
             if (glfwWindowShouldClose(window->glfwWindow)) {
                 mui_window_destroy(window);
                 if (windows->length == 1)
@@ -75,9 +65,8 @@ void mui_loop() {
                 continue;
             }
 
-            if (window->loop == null)
-                continue;
             glfwMakeContextCurrent(window->glfwWindow);
+            glUseProgram(shaderProgramText.id);
 
             int width;
             int height;
@@ -90,5 +79,7 @@ void mui_loop() {
             glfwSwapBuffers(window->glfwWindow);
         }
         list_iter_cleanup(iterator);
+
+        glfwWaitEvents();
     }
 }

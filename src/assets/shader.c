@@ -46,6 +46,8 @@ shader_compile_result compile_shader(GLenum type, string path) {
         fprintf(stderr, "mui: shader compilation error (%s):\n%s\n", str_from_shader_type(type), infoLog);
     }
 
+    free(source);
+
     return (shader_compile_result){shader, success};
 }
 

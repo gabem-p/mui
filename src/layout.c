@@ -45,7 +45,7 @@ typedef struct {
 } layout_settings;
 layout_settings settings;
 
-void compute_elements(list* elements, vec2 cursor, vec2* buffer, uint* bufferSize) {
+void compute_elements(list* elements, vec2 cursor, vec2** buffer, uint* bufferSize) {
     list_iterator* iterator = list_iter_new(elements);
     for (uint i = 0; i < elements->length; i++, list_iter_next(iterator)) {
         mui_element* element = list_iter_get(iterator);
@@ -53,7 +53,8 @@ void compute_elements(list* elements, vec2 cursor, vec2* buffer, uint* bufferSiz
         switch (element->type) {
 
         case ELEMENT_TEXT:
-            *bufferSize += text_shape(element->text.text, element->text.size, cursor, &buffer, *bufferSize);
+            *buffer = text_shape(element->text.text, element->text.size, cursor, *buffer, bufferSize);
+            printf("%i\n", *bufferSize);
             cursor.y += element->text.size;
             break;
 
@@ -62,10 +63,12 @@ void compute_elements(list* elements, vec2 cursor, vec2* buffer, uint* bufferSiz
             vec2* regionBuffer = null;
             uint regionBufferSize = 0;
 
-            compute_elements(element->region.children, cursor, regionBuffer, &regionBufferSize);
+            compute_elements(element->region.children, cursor, &regionBuffer, &regionBufferSize);
 
             glBindBuffer(GL_ARRAY_BUFFER, element->region.id);
             glBufferData(GL_ARRAY_BUFFER, regionBufferSize, regionBuffer, GL_STATIC_DRAW);
+            free(regionBuffer);
+
             element->region.count = regionBufferSize / sizeof(vec2) / 2;
             list_add(layout->regions, element);
             break;
@@ -78,6 +81,8 @@ void mui_layout_compute(mui_layout* layout) {
     if (layout->regions != null)
         list_cleanup(layout->regions);
     layout->regions = list_new();
+
+    compute_elements(layout->elements, VEC2_ZERO, null, 0);
 }
 
 void layout_init(mui_window* window) {
@@ -97,10 +102,14 @@ mui_element* element_new(enum element_type type) {
 
     element->type = type;
     element->layout = layout;
-    if (layout->regionStack->count > 0)
-        element->parent = stack_peek(layout->regionStack);
-    else
+    if (layout->regionStack->count > 0) {
+        mui_element* region = stack_peek(layout->regionStack);
+        element->parent = region;
+        list_add(region->region.children, element);
+    } else {
         element->parent = null;
+        list_add(layout->elements, element);
+    }
 
     return element;
 }
@@ -111,7 +120,7 @@ void mui_region_push() {
 
     element->region.children = list_new();
 
-    stack_push(layout->regionStack, layout->regionStack);
+    stack_push(layout->regionStack, element);
 }
 
 void mui_region_pop() {

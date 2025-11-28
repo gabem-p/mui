@@ -1,6 +1,7 @@
 [project]
 name:mui
 language:c
+flag:g
 
 [include]
 path:.

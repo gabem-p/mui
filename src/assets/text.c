@@ -73,6 +73,8 @@ bool freetype_init(string filename) {
                         GL_RED, GL_UNSIGNED_BYTE, data);
     }
 
+    FT_Done_FreeType(library);
+
     return true;
 }
 
@@ -94,7 +96,7 @@ bool text_init(string filename) {
     return true;
 }
 
-uint text_shape(string text, uint fontSize, vec2 position, vec2** vertexBuffer, uint bufferSize) {
+vec2* text_shape(string text, uint fontSize, vec2 position, vec2* vertexBuffer, uint* bufferSize) {
     hb_font_set_scale(hbFont, fontSize * 64, fontSize * 64);
 
     hb_buffer_t* buffer = hb_buffer_create();
@@ -108,12 +110,19 @@ uint text_shape(string text, uint fontSize, vec2 position, vec2** vertexBuffer, 
     hb_glyph_info_t* glyphInfo = hb_buffer_get_glyph_infos(buffer, &glyphCount);
     hb_glyph_position_t* glyphPos = hb_buffer_get_glyph_positions(buffer, &glyphCount);
 
-    uint size = bufferSize + glyphCount * 2 * 6 * sizeof(vec2);
-    *vertexBuffer = realloc(*vertexBuffer, size);
+    uint j = *bufferSize;
+
+    *bufferSize += glyphCount * 2 * 6 * sizeof(vec2);
+    vec2* vbuffer;
+    if (vertexBuffer == null)
+        vbuffer = malloc(*bufferSize);
+    else
+        vbuffer = realloc(vertexBuffer, *bufferSize);
+    printf("j=%i vbuf=%p start=%p first=<%f,%f> size=%i\n", j, vbuffer, vbuffer + j, vbuffer[j].x, vbuffer[j].y, *bufferSize);
 
     float cursorX = position.x;
     float cursorY = position.y + fontSize;
-    uint j = 0;
+    printf("text=\"%s\", fontSize=%i bufferSize=%i\n", text, fontSize, *bufferSize);
     for (uint i = 0; i < glyphCount; i++) {
         hb_codepoint_t glyph = glyphInfo[i].codepoint;
         glyph_metrics metrics = metricsTable[glyph];
@@ -125,26 +134,28 @@ uint text_shape(string text, uint fontSize, vec2 position, vec2** vertexBuffer, 
         uint x = (glyph % (ATLAS_SIZE / FONT_SIZE)) * FONT_SIZE;
         uint y = (glyph / (ATLAS_SIZE / FONT_SIZE)) * FONT_SIZE;
 
-        *vertexBuffer[j++] = vec2(cursorX + bearingX, cursorY - bearingY);
-        *vertexBuffer[j++] = vec2(x, y);
+        vbuffer[j++] = vec2(cursorX + bearingX, cursorY - bearingY);
+        vbuffer[j++] = vec2(x, y);
 
-        *vertexBuffer[j++] = vec2(cursorX + bearingX, cursorY - bearingY + height);
-        *vertexBuffer[j++] = vec2(x, y + metrics.height);
+        vbuffer[j++] = vec2(cursorX + bearingX, cursorY - bearingY + height);
+        vbuffer[j++] = vec2(x, y + metrics.height);
 
-        *vertexBuffer[j++] = vec2(cursorX + bearingX + width, cursorY - bearingY + height);
-        *vertexBuffer[j++] = vec2(x + metrics.width, y + metrics.height);
+        vbuffer[j++] = vec2(cursorX + bearingX + width, cursorY - bearingY + height);
+        vbuffer[j++] = vec2(x + metrics.width, y + metrics.height);
 
-        *vertexBuffer[j++] = vec2(cursorX + bearingX + width, cursorY - bearingY + height);
-        *vertexBuffer[j++] = vec2(x + metrics.width, y + metrics.height);
+        vbuffer[j++] = vec2(cursorX + bearingX + width, cursorY - bearingY + height);
+        vbuffer[j++] = vec2(x + metrics.width, y + metrics.height);
 
-        *vertexBuffer[j++] = vec2(cursorX + bearingX + width, cursorY - bearingY);
-        *vertexBuffer[j++] = vec2(x + metrics.width, y);
+        vbuffer[j++] = vec2(cursorX + bearingX + width, cursorY - bearingY);
+        vbuffer[j++] = vec2(x + metrics.width, y);
 
-        *vertexBuffer[j++] = vec2(cursorX + bearingX, cursorY - bearingY);
-        *vertexBuffer[j++] = vec2(x, y);
+        vbuffer[j++] = vec2(cursorX + bearingX, cursorY - bearingY);
+        vbuffer[j++] = vec2(x, y);
 
         cursorX += (float)glyphPos[i].x_advance / 64;
     }
 
-    return size;
+    hb_buffer_destroy(buffer);
+
+    return vbuffer;
 }

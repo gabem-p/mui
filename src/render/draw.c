@@ -1,17 +1,16 @@
 #include <GLES3/gl32.h>
+#include "src/window.h"
 #include <mstd/common.h>
 #include "src/assets/text.h"
 #include "src/assets/shader.h"
 #include "src/layout.h"
 
-uint vao;
-
 void mui_draw(mui_layout* layout) {
-    mui_element* root = list_get(layout->elements, 0);
-    list_iterator* iterator = list_iter_new(root->region.children);
-    for (uint i = 0; i < root->region.children->length; i++, list_iter_next(iterator)) {
+    list_iterator* iterator = list_iter_new(layout->regions);
+    for (uint i = 0; i < layout->regions->length; i++, list_iter_next(iterator)) {
         mui_element* region = list_iter_get(iterator);
 
+        glBindVertexArray(((mui_window*)layout->window)->vao);
         glBindTexture(GL_TEXTURE_2D, fontAtlasId);
         glBindBuffer(GL_ARRAY_BUFFER, region->region.id);
         glUniform1i(shaderProgramText.samplerUniform, 0);
